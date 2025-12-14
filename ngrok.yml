@@ -1,0 +1,17 @@
+version: "2"
+authtoken: 1mALkgu0UYz2ePuZc46xtZ5GMcv_4GG6vTzoa2kCXp3LEuMW  # Get from https://dashboard.ngrok.com/get-started/your-authtoken
+
+tunnels:
+  frontend:
+    addr: 5173
+    proto: http
+    inspect: true
+    # Uncomment and customize if you have a paid plan
+    # subdomain: your-app-frontend
+    
+  backend:
+    addr: 4000
+    proto: http
+    inspect: true
+    # Uncomment and customize if you have a paid plan
+    # subdomain: your-app-backend

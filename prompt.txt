@@ -1,0 +1,404 @@
+Build the Company Registration & Verification Module
+
+Project summary (one-liner)
+Build a production-ready Company Registration & Verification Module (React + Node/Express + PostgreSQL) that supports user registration/login (Firebase + JWT), multi-step company registration with image uploads (Cloudinary), profile management, full test coverage, documented APIs, and a demo-ready local deployment.
+
+Objectives & success criteria
+
+Fully working frontend (React + Vite) and backend (Node 20 + Express) connected to a PostgreSQL DB running locally.
+
+Authentication using Firebase (email/password + SMS OTP), with backend issuing JWT tokens (90-day validity).
+
+Company multi-step registration form (dashboard) with Cloudinary uploads for logo/banner; company_profile saved in PostgreSQL and linked to users table.
+
+All protected APIs validated by JWT middleware.
+
+Unit & integration tests for backend and frontend. Postman/Thunder Client collection included.
+
+Clear README and Google-Docs-style API documentation (endpoints, sample requests/responses, env variables).
+
+App ready for a demo on August 13, 2025 (show working features on localhost).
+
+Confidential: Do not publish code to public repos; comply with NDA.
+
+Tech stack (mandatory)
+
+Frontend
+
+React 19 + Vite
+
+Redux Toolkit (required) — do not use Context API or plain Redux
+
+@tanstack/react-query for API fetching
+
+MUI (@mui/material) + @emotion/react + @emotion/styled
+
+react-hook-form for multi-step forms
+
+react-phone-input-2 for phone inputs
+
+react-toastify for notifications
+
+react-responsive for breakpoints
+
+axios for HTTP requests
+
+Optional utils: react-datepicker, sweetalert2, recharts (if charts needed)
+
+Backend
+
+Node.js 20.x (LTS)
+
+Express
+
+PostgreSQL 15 (local)
+
+pg (node-postgres)
+
+jsonwebtoken (JWT — 90-day expiry)
+
+bcrypt for password hashing (even if Firebase used — store hashed fallback passwords if needed)
+
+express-validator, sanitize-html
+
+libphonenumber-js
+
+helmet, cors, compression
+
+http-errors for consistent error responses
+
+External services
+
+Firebase (email/password auth + SMS OTP)
+
+Cloudinary (image upload + storage)
+
+Figma design will be followed exactly (link provided in assets)
+
+Database SQL file provided (import to local PostgreSQL)
+
+Database schema (must match provided SQL)
+
+Table: users
+
+id (integer PK, auto-increment)
+
+email varchar(255), not null, unique
+
+password text, not null (store hashed if used)
+
+full_name varchar(255), not null
+
+signup_type char(1) default 'e'
+
+gender char(1) — values 'm', 'f', 'o'
+
+mobile_no varchar(20), not null, unique (store with country code)
+
+is_mobile_verified boolean default false
+
+is_email_verified boolean default false
+
+created_at timestamp default CURRENT_TIMESTAMP
+
+updated_at timestamp default CURRENT_TIMESTAMP (auto update via trigger)
+
+Table: company_profile
+
+id integer PK, auto-increment
+
+owner_id integer NOT NULL references users(id)
+
+company_name text NOT NULL
+
+address text NOT NULL
+
+city varchar(50) NOT NULL
+
+state varchar(50) NOT NULL
+
+country varchar(50) NOT NULL
+
+postal_code varchar(20) NOT NULL
+
+website text NULL
+
+logo_url text NULL
+
+banner_url text NULL
+
+industry text NOT NULL
+
+founded_date date NULL
+
+description text NULL
+
+social_links jsonb NULL
+
+created_at timestamp default CURRENT_TIMESTAMP
+
+updated_at timestamp default CURRENT_TIMESTAMP (auto update via trigger)
+
+API spec (deliver as OpenAPI/Swagger + Postman/Thunder collection)
+
+All responses must be JSON with success, message, and data keys where applicable. Use standard HTTP status codes.
+
+Auth
+
+POST /api/auth/register
+Request body: { email, password, full_name, gender, mobile_no, signup_type }
+Behavior: Create user via Firebase (email/password), store user row in users with is_email_verified=false and is_mobile_verified=false, trigger Firebase SMS OTP flow.
+Sample response: { success: true, message: "User registered successfully. Please verify mobile OTP.", data: { user_id } }
+
+POST /api/auth/login
+Request body: { email, password }
+Behavior: Authenticate with Firebase; on success, backend creates JWT (90d) and returns it. Return user profile as data.
+Sample response: { success: true, message: "Login success", data: { token, user } }
+
+GET /api/auth/verify-email?token=<firebase-token>
+Behavior: Called from Firebase email verification link; set is_email_verified=true in DB.
+
+POST /api/auth/verify-mobile
+Request body: { user_id, otp }
+Behavior: Validate via Firebase; if valid set is_mobile_verified=true.
+
+Company
+
+POST /api/company/register — Protected (JWT)
+Body: company fields (name, address, city, state, country, postal_code, website, industry, founded_date, description, social_links) + owner_id from JWT
+Behavior: Insert into company_profile with owner_id.
+
+GET /api/company/profile — Protected (JWT)
+Behavior: Return company_profile for logged-in user.
+
+PUT /api/company/profile — Protected (JWT)
+Behavior: Update company_profile.
+
+POST /api/company/upload-logo — Protected (JWT)
+Form-data: file; Behavior: Upload to Cloudinary, return URL and update company_profile.logo_url.
+
+POST /api/company/upload-banner — Protected (JWT)
+Same as above for banner_url.
+
+Error handling
+
+Use http-errors for 400/401/403/404/500 with consistent structure.
+
+Always include helpful message field and validation error details when applicable.
+
+Frontend details & UX requirements
+
+Implement exact Figma flows (multi-step registration displayed after login inside dashboard).
+
+Multi-step form built using react-hook-form and validated both client-side and server-side.
+
+Save intermediate form state in Redux Toolkit slice (so user can navigate between steps without losing input).
+
+Display upload preview for logo/banner before upload.
+
+Use @tanstack/react-query for data fetching + caching and optimistic updates where applicable.
+
+Store JWT in Redux (or secure HttpOnly cookie if recommended) and attach to axios requests.
+
+Show toast notifications using react-toastify on success/error.
+
+Provide mobile responsive layouts — test at common breakpoints.
+
+Dashboard: show user details and company details; edit profile in settings.
+
+All input fields must be validated: email format, password complexity (min 8, uppercase, number, special char), phone validation (libphonenumber).
+
+Backend implementation details
+
+JWT generation & verification utility (90-day expiry). Secret stored in env var.
+
+Create authMiddleware to validate JWT and inject user object into req.user.
+
+Centralized error handler.
+
+Use parameterized queries or query builder to avoid SQL injection.
+
+Use express-validator for route validation. Sanitize HTML for description fields.
+
+Cloudinary service wrapper for uploads; return secure URLs.
+
+Use migration scripts or provide SQL import instructions; include sample seed data for quick demo.
+
+Testing & quality
+
+Frontend tests
+
+Use jest + @testing-library/react.
+
+Tests: multi-step form validation, component rendering, Redux slices, react-query success/fail states.
+
+Backend tests
+
+Use jest + supertest.
+
+Tests: auth.register, auth.login, verify-mobile/email flows, company CRUD, JWT middleware.
+
+API testing
+
+Provide a Postman or Thunder Client collection that tests all endpoints with valid/invalid cases.
+
+Include environment variables in collection for baseURL, firebase mock tokens, and JWT.
+
+Linting & formatting
+
+ESLint with sensible rules, Prettier, and Husky pre-commit hooks for lint-staged.
+
+Documentation & deliverables
+
+README.md (root) with setup instructions, env vars, and run commands.
+
+docs/API.md (or OpenAPI JSON) describing endpoints, headers, sample requests/responses, error codes.
+
+Postman / Thunder Client collection.
+
+Unit and integration test reports.
+
+A short demo script (bullet points) to run during the August 13 demo.
+
+Provide SQL file / migration scripts and seed data for demo users and company profile.
+
+Provide docker-compose.yml (optional but preferred) for local Postgres + app services for easy demo.
+
+Environment variables (example)
+
+PORT=4000
+
+DATABASE_URL=postgresql://user:pass@localhost:5432/company_db
+
+JWT_SECRET=<strong-secret>
+
+JWT_EXPIRES_IN=90d
+
+FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL (Firebase admin SDK)
+
+CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+
+CORS_ORIGIN=http://localhost:5173
+
+NODE_ENV=development
+
+Security & compliance
+
+Hash any stored password with bcrypt (even if Firebase primary).
+
+Validate and sanitize all user-supplied content (especially description, website, and social_links).
+
+Use helmet to set secure headers and cors for allowed origins.
+
+No secrets checked into repo. Use .env and .env.example.
+
+NDA: Do not publish code on GitHub or similar public platforms. Only share code during the demo via the allowed channel.
+
+Project structure (must follow)
+/frontend
+  /public
+  /src
+    /assets
+    /components
+    /pages
+    /store
+    /api
+    /styles
+    App.jsx
+    main.jsx
+  package.json
+/backend
+  /src
+    /controllers
+    /routes
+    /middleware
+    /services
+    /models
+    /utils
+    /config
+    /tests
+    server.js
+  package.json
+/docker-compose.yml (optional)
+README.md
+docs/API.md
+postman_collection.json
+company_db.sql
+
+Timeline & milestone checklist
+
+Milestone 1 — Setup (Aug 7–8)
+
+Initialize repos (frontend + backend).
+
+Import company_db.sql to local Postgres and run basic schema check.
+
+Configure Firebase dev project and Cloudinary account.
+
+Install dependencies.
+
+Milestone 2 — Backend Core (Aug 9–10)
+
+Implement register/login, verify-mobile/email, JWT middleware.
+
+Company profile CRUD + Cloudinary upload endpoints.
+
+Basic unit tests for auth + company routes.
+
+Milestone 3 — Frontend Core (Aug 11–12)
+
+Multi-step company registration form + dashboard + settings.
+
+Integrate Redux Toolkit and react-query.
+
+Image upload UI + preview.
+
+Frontend unit tests.
+
+Milestone 4 — Testing, Docs & Demo Prep (Aug 12)
+
+Run full test suite.
+
+Finalize API docs + Postman collection.
+
+Prepare demo script and seed data.
+
+Milestone 5 — Demo (Aug 13)
+
+Demonstrate login/register, OTP & email verification, company registration, editing, image uploads, and API calls in Postman/Thunder.
+
+Demo script (short bullets to follow)
+
+Start Postgres locally (and docker-compose if provided).
+
+Start backend (npm run dev) and frontend (npm run dev).
+
+Show POST /api/auth/register (register user flow) → demonstrate SMS OTP flow and email verification.
+
+Login and show JWT returned and stored in Redux.
+
+Show multi-step company registration flow; upload logo and banner; display saved profile in dashboard.
+
+Edit company profile and re-upload logo/banner to demonstrate update APIs.
+
+Open Postman collection and run tests for error cases and success cases.
+
+Show test coverage reports and documentation.
+
+Acceptance criteria (must pass to consider task complete)
+
+All required endpoints implemented and passing integration tests.
+
+Frontend multi-step form working and data saved to DB.
+
+Image upload to Cloudinary works and URLs stored in DB.
+
+Firebase email & SMS OTP flows integrated and DB flags updated.
+
+JWT protects protected endpoints; expired/invalid tokens return 401.
+
+Linting and tests configured; major tests passing (CI optional).
+
+README, API docs, Postman collection, seed data, and demo script provided.
+
+Code not published publicly; deliver via private channel only.

@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.test
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+
+# Build
+dist/
