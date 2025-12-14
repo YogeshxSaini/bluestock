@@ -11,6 +11,7 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password TEXT NOT NULL,
     full_name VARCHAR(255) NOT NULL,
+    firebase_uid VARCHAR(128) UNIQUE,
     signup_type CHAR(1) DEFAULT 'e' CHECK (signup_type IN ('e', 's', 'g')), -- e=email, s=sms, g=google
     gender CHAR(1) CHECK (gender IN ('m', 'f', 'o')), -- m=male, f=female, o=other
     mobile_no VARCHAR(20) NOT NULL UNIQUE,
@@ -44,6 +45,7 @@ CREATE TABLE company_profile (
 -- Create indexes for better query performance
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_mobile ON users(mobile_no);
+CREATE INDEX idx_users_firebase_uid ON users(firebase_uid);
 CREATE INDEX idx_company_owner ON company_profile(owner_id);
 
 -- Create function to automatically update updated_at timestamp
