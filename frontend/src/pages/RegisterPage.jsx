@@ -101,7 +101,9 @@ const RegisterPage = () => {
         console.log('Signed in to Firebase:', firebaseUser.uid);
       } catch (signInError) {
         console.error('Firebase sign-in failed:', signInError);
-        toast.warning('Registration successful but could not sign in to Firebase. Please try logging in.');
+        toast('Registration successful but could not sign in to Firebase. Please try logging in.', {
+          icon: '⚠️',
+        });
       }
 
       // Step 3: Send email verification (optional, don't fail registration if this fails)
@@ -113,9 +115,13 @@ const RegisterPage = () => {
           console.error('Email verification send failed:', emailError);
           // Check for rate limit error
           if (emailError.message.includes('too-many-requests')) {
-            toast.warning('Too many requests. Please wait a few minutes and verify your email from the verification page.');
+            toast('Too many requests. Please wait a few minutes and verify your email from the verification page.', {
+              icon: '⚠️',
+            });
           } else {
-            toast.warning('Could not send verification email. You can verify later from your account.');
+            toast('Could not send verification email. You can verify later from your account.', {
+              icon: '⚠️',
+            });
           }
         }
       }
