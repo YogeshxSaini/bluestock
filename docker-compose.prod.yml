@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: bluestock_db
+    restart: always
+    environment:
+      POSTGRES_USER: company_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-company_password}
+      POSTGRES_DB: company_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./company_db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U company_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bluestock_backend
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: company_db
+      DB_USER: company_user
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-company_password}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 90d
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bluestock_frontend
+    restart: always
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-/api}
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: bluestock_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
